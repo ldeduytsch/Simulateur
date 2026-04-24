@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur d'intérêts composés – Le Marché Lucide</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Georgia', serif;
+  background: #f8f7f4;
+  color: #1a1a18;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a18;
+  letter-spacing: -0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  font-size: 0.95rem;
+  color: #6b6b65;
+  font-style: italic;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid #e8e6e0;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #6b6b65;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1a1a18;
+  word-break: break-word;
+}
+
+.stat-value.green { color: #2e7d32; }
+
+.controls-card {
+  background: #fff;
+  border: 1px solid #e8e6e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 2rem;
+}
+
+@media (max-width: 520px) {
+  .controls-grid { grid-template-columns: 1fr; }
+}
+
+.control-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.control-header label {
+  font-size: 13px;
+  color: #6b6b65;
+}
+
+.control-header .val {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a18;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: #e8e6e0;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #1a1a18;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #1a1a18;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #1a1a18;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #1a1a18;
+}
+
+.freq-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e8e6e0;
+}
+
+.freq-row label {
+  font-size: 13px;
+  color: #6b6b65;
+}
+
+select {
+  font-size: 13px;
+  padding: 5px 10px;
+  border: 1px solid #e8e6e0;
+  border-radius: 6px;
+  background: #f8f7f4;
+  color: #1a1a18;
+  cursor: pointer;
+  outline: none;
+}
+
+select:focus { border-color: #1a1a18; }
+
+.chart-card {
+  background: #fff;
+  border: 1px solid #e8e6e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b6b65;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 280px;
+}
+
+.disclaimer {
+  font-size: 11px;
+  color: #a0a09a;
+  text-align: center;
+  font-style: italic;
+  line-height: 1.6;
+  padding: 0.5rem 0 1rem;
+}
+
+.branding {
+  text-align: center;
+  font-size: 12px;
+  color: #a0a09a;
+  margin-top: 0.5rem;
+}
+
+.branding a {
+  color: #1a1a18;
+  text-decoration: none;
+  border-bottom: 1px solid #e8e6e0;
+}
+
+.branding a:hover { border-color: #1a1a18; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>Simulateur d'intérêts composés</h1>
+    <p>Visualisez la puissance des intérêts composés sur le long terme</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Capital final</div>
+      <div class="stat-value" id="s-final">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total versé</div>
+      <div class="stat-value" id="s-verse">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Intérêts gagnés</div>
+      <div class="stat-value green" id="s-gains">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Multiplicateur</div>
+      <div class="stat-value" id="s-multi">—</div>
+    </div>
+  </div>
+
+  <div class="controls-card">
+    <div class="controls-grid">
+
+      <div class="control-group">
+        <div class="control-header">
+          <label for="c-capital">Capital initial</label>
+          <span class="val" id="lbl-capital">10 000 EUR</span>
+        </div>
+        <input type="range" id="c-capital" min="0" max="200000" step="500" value="10000">
+      </div>
+
+      <div class="control-group">
+        <div class="control-header">
+          <label for="c-mensuel">Versement mensuel</label>
+          <span class="val" id="lbl-mensuel">200 EUR</span>
+        </div>
+        <input type="range" id="c-mensuel" min="0" max="5000" step="50" value="200">
+      </div>
+
+      <div class="control-group">
+        <div class="control-header">
+          <label for="c-taux">Taux annuel</label>
+          <span class="val" id="lbl-taux">7,0 %</span>
+        </div>
+        <input type="range" id="c-taux" min="0.5" max="200" step="0.5" value="7">
+      </div>
+
+      <div class="control-group">
+        <div class="control-header">
+          <label for="c-duree">Durée</label>
+          <span class="val" id="lbl-duree">20 ans</span>
+        </div>
+        <input type="range" id="c-duree" min="1" max="40" step="1" value="20">
+      </div>
+
+    </div>
+
+    <div class="freq-row">
+      <label for="c-freq">Fréquence de capitalisation :</label>
+      <select id="c-freq">
+        <option value="12">Mensuelle</option>
+        <option value="4">Trimestrielle</option>
+        <option value="1">Annuelle</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#1a1a18;"></div>
+        Capital versé
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#2e7d32;"></div>
+        Intérêts composés
+      </div>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="lmc-chart"></canvas>
+    </div>
+  </div>
+
+  <p class="disclaimer">
+    Simulation à titre indicatif uniquement. Ce simulateur ne constitue pas un conseil en investissement financier.<br>
+    Les performances passées ne préjugent pas des performances futures. Tout investissement comporte un risque de perte en capital.
+  </p>
+
+  <p class="branding">
+    Un outil proposé par <a href="https://lemarchelucide.blogspot.com" target="_blank">Le Marché Lucide</a>
+  </p>
+
+</div>
+
+<!-- Chart.js chargé ICI, après le canvas, avant le script -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<script>
+(function () {
+
+  function eur(n) {
+    if (!isFinite(n) || n > 1e15) return '> 1 000 T EUR';
+    if (n >= 1e12) return (n / 1e12).toFixed(1).replace('.', ',') + ' B EUR';
+    if (n >= 1e9)  return (n / 1e9).toFixed(1).replace('.', ',') + ' Md EUR';
+    if (n >= 1e6)  return (n / 1e6).toFixed(1).replace('.', ',') + ' M EUR';
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency', currency: 'EUR', maximumFractionDigits: 0
+    }).format(Math.round(n));
+  }
+
+  function val(id) {
+    return parseFloat(document.getElementById(id).value) || 0;
+  }
+
+  function compute() {
+    var C0 = val('c-capital');
+    var m  = val('c-mensuel');
+    var r  = val('c-taux') / 100;
+    var n  = Math.round(val('c-duree'));
+    var f  = Math.round(val('c-freq'));
+
+    var labels = [], verse = [], gains = [];
+
+    for (var y = 0; y <= n; y++) {
+      var p  = y * f;
+      var rp = r / f;
+      var cap = rp > 0
+        ? C0 * Math.pow(1 + rp, p) + m * (Math.pow(1 + rp, p) - 1) / rp
+        : C0 + m * p;
+      var v = C0 + m * 12 * y;
+      var g = Math.max(0, cap - v);
+      labels.push(y === 0 ? 'Depart' : 'An ' + y);
+      verse.push(Math.round(v));
+      gains.push(Math.round(g));
+    }
+
+    var tv = verse[n];
+    var tg = gains[n];
+    var tf = tv + tg;
+
+    document.getElementById('s-final').textContent = eur(tf);
+    document.getElementById('s-verse').textContent = eur(tv);
+    document.getElementById('s-gains').textContent = eur(tg);
+    document.getElementById('s-multi').textContent = tv > 0 ? 'x ' + (tf / tv).toFixed(2) : 'x 1';
+
+    return { labels: labels, verse: verse, gains: gains };
+  }
+
+  var myChart = null;
+
+  function refresh() {
+    document.getElementById('lbl-capital').textContent =
+      new Intl.NumberFormat('fr-FR').format(val('c-capital')) + ' EUR';
+    document.getElementById('lbl-mensuel').textContent =
+      new Intl.NumberFormat('fr-FR').format(val('c-mensuel')) + ' EUR';
+    document.getElementById('lbl-taux').textContent =
+      val('c-taux').toFixed(1).replace('.', ',') + ' %';
+    document.getElementById('lbl-duree').textContent =
+      Math.round(val('c-duree')) + ' ans';
+
+    var d = compute();
+
+    if (!myChart) {
+      var ctx = document.getElementById('lmc-chart').getContext('2d');
+      myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: d.labels,
+          datasets: [
+            {
+              label: 'Capital verse',
+              data: d.verse,
+              backgroundColor: '#1a1a18',
+              stack: 's'
+            },
+            {
+              label: 'Interets composes',
+              data: d.gains,
+              backgroundColor: '#2e7d32',
+              stack: 's'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 200 },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function (c) {
+                  return ' ' + c.dataset.label + ' : ' + eur(c.parsed.y);
+                },
+                footer: function (items) {
+                  var t = items.reduce(function (s, i) { return s + i.parsed.y; }, 0);
+                  return 'Total : ' + eur(t);
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              ticks: {
+                autoSkip: true,
+                maxRotation: 0,
+                font: { size: 11, family: 'Georgia, serif' },
+                color: '#6b6b65'
+              },
+              grid: { color: '#f0ede8' }
+            },
+            y: {
+              stacked: true,
+              ticks: {
+                color: '#6b6b65',
+                font: { size: 11, family: 'Georgia, serif' },
+                callback: function (v) {
+                  if (v >= 1e12) return (v / 1e12).toFixed(0) + 'B EUR';
+                  if (v >= 1e9)  return (v / 1e9).toFixed(0)  + 'Md EUR';
+                  if (v >= 1e6)  return (v / 1e6).toFixed(0)  + 'M EUR';
+                  if (v >= 1000) return Math.round(v / 1000)   + 'k EUR';
+                  return v + ' EUR';
+                }
+              },
+              grid: { color: '#f0ede8' }
+            }
+          }
+        }
+      });
+    } else {
+      myChart.data.labels           = d.labels;
+      myChart.data.datasets[0].data = d.verse;
+      myChart.data.datasets[1].data = d.gains;
+      myChart.update('none');
+    }
+  }
+
+  ['c-capital', 'c-mensuel', 'c-taux', 'c-duree'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', refresh);
+  });
+  document.getElementById('c-freq').addEventListener('change', refresh);
+
+  refresh();
+
+})();
+</script>
+
+</body>
+</html>
